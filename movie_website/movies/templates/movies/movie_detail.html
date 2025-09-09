@@ -1,0 +1,72 @@
+{% extends 'movies/base.html' %}
+
+{% block title %}{{ movie.title }} - Movie Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" class="img-fluid rounded shadow" alt="{{ movie.title }}">
+            {% else %}
+                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="fas fa-film fa-5x text-white"></i>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <h1 class="display-5">{{ movie.title }}</h1>
+            <div class="mb-3">
+                <span class="badge bg-primary">{{ movie.category.name }}</span>
+                <span class="rating-stars ms-3">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= movie.rating|floatformat:"0" %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="ms-2">{{ movie.rating }}/10</span>
+                </span>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <strong>Release Date:</strong> {{ movie.release_date|date:"F d, Y" }}
+                </div>
+                <div class="col-sm-6">
+                    <strong>Added by:</strong> {{ movie.added_by.first_name }} {{ movie.added_by.last_name }}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <strong>Cast:</strong> {{ movie.actors }}
+            </div>
+
+            <div class="mb-4">
+                <h4>Description</h4>
+                <p>{{ movie.description }}</p>
+            </div>
+
+            {% if movie.youtube_trailer %}
+                <div class="mb-4">
+                    <a href="{{ movie.youtube_trailer }}" target="_blank" class="btn btn-danger">
+                        <i class="fab fa-youtube me-2"></i>Watch Trailer
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if user.is_authenticated and can_edit %}
+                <div class="mt-4">
+                    <a href="{% url 'edit_movie' movie.pk %}" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-1"></i>Edit Movie
+                    </a>
+                    <a href="{% url 'delete_movie' movie.pk %}" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Movie
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

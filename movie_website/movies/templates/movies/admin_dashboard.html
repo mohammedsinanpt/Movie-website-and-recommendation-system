@@ -1,0 +1,137 @@
+<!-- Admin Dashboard Template (movies/templates/movies/admin_dashboard.html) -->
+{% extends 'movies/base.html' %}
+
+{% block title %}Admin Dashboard - Movie Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_movies }}</h4>
+                            <p class="mb-0">Total Movies</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-film fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_users }}</h4>
+                            <p class="mb-0">Total Users</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_categories }}</h4>
+                            <p class="mb-0">Categories</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tags fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>Active</h4>
+                            <p class="mb-0">System Status</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3>Quick Actions</h3>
+            <div class="btn-group" role="group">
+                <a href="{% url 'manage_categories' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tags me-1"></i>Manage Categories
+                </a>
+                <a href="{% url 'manage_users' %}" class="btn btn-outline-success">
+                    <i class="fas fa-users me-1"></i>Manage Users
+                </a>
+                <a href="{% url 'add_movie' %}" class="btn btn-outline-info">
+                    <i class="fas fa-plus me-1"></i>Add Movie
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Movies</h5>
+                </div>
+                <div class="card-body">
+                    {% for movie in recent_movies %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <strong>{{ movie.title }}</strong><br>
+                                <small class="text-muted">by {{ movie.added_by.username }}</small>
+                            </div>
+                            <small class="text-muted">{{ movie.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No movies yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Users</h5>
+                </div>
+                <div class="card-body">
+                    {% for user in recent_users %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <strong>{{ user.first_name }} {{ user.last_name }}</strong><br>
+                                <small class="text-muted">{{ user.username }}</small>
+                            </div>
+                            <small class="text-muted">{{ user.date_joined|date:"M d, Y" }}</small>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No users yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
