@@ -1,0 +1,91 @@
+{% extends 'movies/base.html' %}
+
+{% block title %}My Watchlist - Movie Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-heart text-danger me-2"></i>My Watchlist</h2>
+                <span class="badge bg-primary">{{ watchlist_count }} movie{{ watchlist_count|pluralize }}</span>
+            </div>
+
+            {% if watchlist_items %}
+                <div class="row">
+                    {% for item in watchlist_items %}
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                            <div class="card movie-card h-100">
+                                {% if item.movie.poster %}
+                                    <img src="{{ item.movie.poster.url }}" class="card-img-top movie-poster" alt="{{ item.movie.title }}">
+                                {% else %}
+                                    <div class="card-img-top movie-poster bg-secondary d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-film fa-3x text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.movie.title }}</h5>
+                                    <p class="card-text">{{ item.movie.description|truncatewords:15 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">{{ item.movie.category.name }}</small>
+                                        <span class="rating-stars">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= item.movie.average_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <small class="ms-1 text-muted">({{ item.movie.total_ratings }})</small>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Added to watchlist: {{ item.added_at|date:"M d, Y" }}</small>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="{% url 'movie_detail' item.movie.pk %}" class="btn btn-primary btn-sm">View Details</a>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="removeFromWatchlist({{ item.movie.pk }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-heart fa-4x text-muted mb-3"></i>
+                    <h4>Your watchlist is empty</h4>
+                    <p class="text-muted mb-4">Start adding movies to your watchlist to keep track of what you want to watch!</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">Browse Movies</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function removeFromWatchlist(movieId) {
+    if (confirm('Are you sure you want to remove this movie from your watchlist?')) {
+        fetch(`/movie/${movieId}/watchlist/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh the page to update the list
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing movie from watchlist');
+        });
+    }
+}
+</script>
+{% endblock %}

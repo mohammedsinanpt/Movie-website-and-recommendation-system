@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,6 +24,13 @@
         .rating-stars {
             color: #ffc107;
         }
+        .rating-star {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .rating-star:hover {
+            color: #ffc107 !important;
+        }
     </style>
 </head>
 <body>
@@ -42,9 +48,19 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">Home</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'upcoming_movies' %}">
+                            <i class="fas fa-calendar-alt me-1"></i>Upcoming
+                        </a>
+                    </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'add_movie' %}">➕ Add Movie</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'watchlist' %}">
+                                <i class="fas fa-heart me-1"></i>Watchlist
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -56,6 +72,9 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'watchlist' %}">
+                                    <i class="fas fa-heart me-2"></i>My Watchlist
+                                </a></li>
                                 {% if user.is_staff %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
@@ -88,6 +107,9 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
 
     <!-- Main Content -->
     <main>

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Movie, Category, UserProfile
+from .models import Movie, Category, UserProfile, Rating, Review, UpcomingMovie
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -70,4 +70,52 @@ class UserProfileForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
             'favorite_genres': forms.CheckboxSelectMultiple(),
+        }
+
+
+class RatingForm(forms.ModelForm):
+    """Form for rating movies (1-5 stars)"""
+    class Meta:
+        model = Rating
+        fields = ['rating']
+        widgets = {
+            'rating': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['rating'].label = "Rate this movie"
+
+
+class ReviewForm(forms.ModelForm):
+    """Form for writing movie reviews"""
+    class Meta:
+        model = Review
+        fields = ['review_text']
+        widgets = {
+            'review_text': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Write your review here...'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['review_text'].label = "Your Review"
+
+
+class UpcomingMovieForm(forms.ModelForm):
+    """Form for adding upcoming movies"""
+    class Meta:
+        model = UpcomingMovie
+        fields = ['title', 'poster', 'description', 'expected_release_date', 'actors', 'category', 'youtube_trailer']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'expected_release_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'actors': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'youtube_trailer': forms.URLInput(attrs={'class': 'form-control'}),
+            'poster': forms.FileInput(attrs={'class': 'form-control'}),
         }

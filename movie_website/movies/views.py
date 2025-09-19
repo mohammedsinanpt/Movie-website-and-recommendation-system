@@ -8,6 +8,12 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from .models import Movie, Category, UserProfile
 from .forms import CustomUserCreationForm, MovieForm, CategoryForm, UserProfileForm
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Rating, Review, Watchlist, UpcomingMovie
+from .forms import RatingForm, ReviewForm, UpcomingMovieForm
 
 
 def home(request):
@@ -219,3 +225,186 @@ def delete_user(request, user_id):
         messages.success(request, f'User {user.username} deleted successfully!')
         return redirect('manage_users')
     return render(request, 'movies/delete_user.html', {'user_to_delete': user})
+
+@login_required
+@require_POST
+def rate_movie(request, pk):
+    """AJAX view to handle movie ratings"""
+    movie = get_object_or_404(Movie, pk=pk)
+    
+    try:
+        data = json.loads(request.body)
+        rating_value = int(data.get('rating', 0))
+        
+        if not (1 <= rating_value <= 5):
+            return JsonResponse({'success': False, 'error': 'Rating must be between 1 and 5'})
+        
+        rating, created = Rating.objects.update_or_create(
+            user=request.user,
+            movie=movie,
+            defaults={'rating': rating_value}
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'rating': rating.rating,
+            'average_rating': movie.average_rating(),
+            'total_ratings': movie.total_ratings(),
+            'message': 'Rating updated!' if not created else 'Rating added!'
+        })
+    
+    except (ValueError, json.JSONDecodeError):
+        return JsonResponse({'success': False, 'error': 'Invalid data'})
+
+
+@login_required
+def add_review(request, pk):
+    """Add/Edit review for a movie"""
+    movie = get_object_or_404(Movie, pk=pk)
+    
+    try:
+        review = Review.objects.get(user=request.user, movie=movie)
+        form = ReviewForm(request.POST or None, instance=review)
+        editing = True
+    except Review.DoesNotExist:
+        form = ReviewForm(request.POST or None)
+        editing = False
+    
+    if request.method == 'POST' and form.is_valid():
+        review = form.save(commit=False)
+        review.user = request.user
+        review.movie = movie
+        review.save()
+        messages.success(request, 'Review updated!' if editing else 'Review added!')
+        return redirect('movie_detail', pk=pk)
+    
+    context = {
+        'form': form,
+        'movie': movie,
+        'editing': editing
+    }
+    return render(request, 'movies/add_review.html', context)
+
+
+@login_required
+def delete_review(request, pk):
+    """Delete user's review"""
+    review = get_object_or_404(Review, pk=pk, user=request.user)
+    movie_pk = review.movie.pk
+    
+    if request.method == 'POST':
+        review.delete()
+        messages.success(request, 'Review deleted successfully!')
+        return redirect('movie_detail', pk=movie_pk)
+    
+    return render(request, 'movies/delete_review.html', {'review': review})
+
+
+@login_required
+@require_POST
+def toggle_watchlist(request, pk):
+    """AJAX view to add/remove movie from watchlist"""
+    movie = get_object_or_404(Movie, pk=pk)
+    
+    watchlist_item, created = Watchlist.objects.get_or_create(
+        user=request.user,
+        movie=movie
+    )
+    
+    if not created:
+        watchlist_item.delete()
+        in_watchlist = False
+        message = 'Removed from watchlist'
+    else:
+        in_watchlist = True
+        message = 'Added to watchlist'
+    
+    return JsonResponse({
+        'success': True,
+        'in_watchlist': in_watchlist,
+        'message': message
+    })
+
+
+@login_required
+def watchlist_view(request):
+    """View user's watchlist"""
+    watchlist_items = Watchlist.objects.filter(user=request.user).select_related('movie')
+    
+    context = {
+        'watchlist_items': watchlist_items,
+        'watchlist_count': watchlist_items.count()
+    }
+    return render(request, 'movies/watchlist.html', context)
+
+
+def upcoming_movies(request):
+    """View upcoming movies"""
+    upcoming = UpcomingMovie.objects.all()
+    categories = Category.objects.all()
+    
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        upcoming = upcoming.filter(category_id=category_filter)
+    
+    paginator = Paginator(upcoming, 12)
+    page = request.GET.get('page')
+    upcoming = paginator.get_page(page)
+    
+    context = {
+        'upcoming_movies': upcoming,
+        'categories': categories,
+        'selected_category': category_filter,
+    }
+    return render(request, 'movies/upcoming_movies.html', context)
+
+
+@login_required
+def add_upcoming_movie(request):
+    """Add upcoming movie (admin/staff only)"""
+    if not request.user.is_staff:
+        messages.error(request, 'Only staff members can add upcoming movies.')
+        return redirect('upcoming_movies')
+    
+    if request.method == 'POST':
+        form = UpcomingMovieForm(request.POST, request.FILES)
+        if form.is_valid():
+            upcoming_movie = form.save(commit=False)
+            upcoming_movie.added_by = request.user
+            upcoming_movie.save()
+            messages.success(request, 'Upcoming movie added successfully!')
+            return redirect('upcoming_movies')
+    else:
+        form = UpcomingMovieForm()
+    
+    return render(request, 'movies/add_upcoming_movie.html', {'form': form})
+
+
+# Update your existing movie_detail view to include ratings and reviews
+def movie_detail(request, pk):
+    movie = get_object_or_404(Movie, pk=pk)
+    reviews = Review.objects.filter(movie=movie).select_related('user')
+    user_review = None
+    user_rating = 0
+    in_watchlist = False
+    
+    if request.user.is_authenticated:
+        try:
+            user_review = Review.objects.get(user=request.user, movie=movie)
+        except Review.DoesNotExist:
+            pass
+        
+        user_rating = movie.user_rating(request.user)
+        in_watchlist = Watchlist.objects.filter(user=request.user, movie=movie).exists()
+    
+    context = {
+        'movie': movie,
+        'reviews': reviews,
+        'user_review': user_review,
+        'user_rating': user_rating,
+        'in_watchlist': in_watchlist,
+        'can_edit': movie.can_edit(request.user) if request.user.is_authenticated else False,
+        'average_rating': movie.average_rating(),
+        'total_ratings': movie.total_ratings(),
+    }
+    return render(request, 'movies/movie_detail.html', context)

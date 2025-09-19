@@ -7,16 +7,29 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('movie/<int:pk>/', views.movie_detail, name='movie_detail'),
     path('category/<int:category_id>/', views.movies_by_category, name='movies_by_category'),
+    
+    # Upcoming movies
+    path('upcoming/', views.upcoming_movies, name='upcoming_movies'),
+    path('upcoming/add/', views.add_upcoming_movie, name='add_upcoming_movie'),
 
     # Authentication
     path('register/', views.register_view, name='register'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
-    path('logout/', views.logout_view, name='logout'),  # Fixed this line
+    path('logout/', views.logout_view, name='logout'),
 
     # User movie management
     path('add-movie/', views.add_movie, name='add_movie'),
     path('movie/<int:pk>/edit/', views.edit_movie, name='edit_movie'),
     path('movie/<int:pk>/delete/', views.delete_movie, name='delete_movie'),
+    
+    # Rating and Review system
+    path('movie/<int:pk>/rate/', views.rate_movie, name='rate_movie'),
+    path('movie/<int:pk>/review/', views.add_review, name='add_review'),
+    path('review/<int:pk>/delete/', views.delete_review, name='delete_review'),
+    
+    # Watchlist
+    path('movie/<int:pk>/watchlist/', views.toggle_watchlist, name='toggle_watchlist'),
+    path('watchlist/', views.watchlist_view, name='watchlist'),
 
     # User profile
     path('profile/', views.profile_view, name='profile'),
