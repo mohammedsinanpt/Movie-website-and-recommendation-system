@@ -20,13 +20,13 @@
 ## 📖 Table of Contents
 
 - [Overview](#-overview)
+- [Screenshots](#-screenshots)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
 - [Usage](#-usage)
 - [Project Structure](#-project-structure)
 - [API Endpoints](#-api-endpoints)
-- [Screenshots](#-screenshots)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Contact](#-contact)
@@ -42,6 +42,51 @@ Movie Hub is a full-featured Django web application that allows users to discove
 - **Upcoming Movies**: Track and manage upcoming releases
 - **Admin Dashboard**: Comprehensive content and user management
 - **Responsive Design**: Optimized for all devices
+
+
+## 📸 Screenshots
+
+
+### Home Page
+
+<img width="1878" height="962" alt="Screenshot 2025-09-24 225648" src="https://github.com/user-attachments/assets/7a203880-0505-4b99-9419-870cccd177b4" />
+<img width="1914" height="862" alt="Screenshot 2025-09-09 184544" src="https://github.com/user-attachments/assets/c36a5b6b-ee25-46d1-bfb4-b07c5ba423b4" />
+
+
+- Movie grid with ratings and categories
+- Search and filter functionality
+
+### Movie Detail Page
+<img width="1848" height="898" alt="Screenshot 2025-09-25 155800" src="https://github.com/user-attachments/assets/826e582f-75d7-4d7d-8f1c-b5a1ad1e0046" />
+<img width="1817" height="941" alt="Screenshot 2025-09-24 225912" src="https://github.com/user-attachments/assets/021ed40b-0caa-4060-8c4f-10aa01fbd940" />
+
+- Interactive rating system
+- Reviews section
+- Watchlist toggle
+
+### User Dashboard
+
+
+<img width="1325" height="730" alt="Screenshot 2025-09-24 225935" src="https://github.com/user-attachments/assets/80ed622c-3b89-46fb-bf3c-ddf763159feb" />
+
+- Personal movie contributions
+- Profile management
+- Watchlist overview
+
+### Admin Panel
+
+<img width="1859" height="959" alt="Screenshot 2025-09-25 160329" src="https://github.com/user-attachments/assets/330f56f2-4169-40c9-b14c-da6e93c6d2d5" />
+
+- Site statistics
+- User and content management
+
+### Other Screenshots
+
+<img width="1165" height="903" alt="Screenshot 2025-09-24 230012" src="https://github.com/user-attachments/assets/c67e95e2-3fbc-4366-8ef2-faf279c0fd92" />
+<img width="1882" height="884" alt="Screenshot 2025-09-24 225706" src="https://github.com/user-attachments/assets/aa6d8482-efa8-4bc5-99f7-673bf9644898" />
+<img width="1899" height="959" alt="Screenshot 2025-09-25 161651" src="https://github.com/user-attachments/assets/6532b31a-72ba-46da-8a17-2ad89966d81d" />
+<img width="1165" height="903" alt="Screenshot 2025-09-24 230012" src="https://github.com/user-attachments/assets/24a1054b-7f1b-4666-aaf6-55ecb9c78cce" />
+<img width="1870" height="934" alt="Screenshot 2025-09-25 161909" src="https://github.com/user-attachments/assets/4d09c6c9-2b42-499a-8bde-6e1f60955279" />
 
 ## ✨ Features
 
@@ -239,29 +284,6 @@ movie_hub/
 - `GET /admin/users/` - Manage users
 - `POST /upcoming/add/` - Add upcoming movie
 
-## 📸 Screenshots
-
-
-### Home Page
-
-
-- Movie grid with ratings and categories
-- Search and filter functionality
-
-### Movie Detail Page
-- Interactive rating system
-- Reviews section
-- Watchlist toggle
-
-### User Dashboard
-- Personal movie contributions
-- Profile management
-- Watchlist overview
-
-### Admin Panel
-- Site statistics
-- User and content management
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -283,8 +305,6 @@ Contributions are welcome! Please follow these steps:
 **mohammed sinan P T** - [cnansinz@gmail.com](mailto:cnansinz@gmail.com)
 
 **Project Link**: [https://github.com/mohammedsinanpt/Movie-website-and-recommendation-system](https://github.com/mohammedsinanpt/Movie-website-and-recommendation-system)
-
-
 
 ---
 
