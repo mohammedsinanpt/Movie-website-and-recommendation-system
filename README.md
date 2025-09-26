@@ -66,8 +66,8 @@ Movie Hub is a full-featured Django web application that allows users to discove
 
 ### User Dashboard
 
+<img width="1795" height="942" alt="Screenshot 2025-09-26 203945" src="https://github.com/user-attachments/assets/6892f05e-74ea-473b-af82-938f2474efe0" />
 
-<img width="1325" height="730" alt="Screenshot 2025-09-24 225935" src="https://github.com/user-attachments/assets/80ed622c-3b89-46fb-bf3c-ddf763159feb" />
 
 - Personal movie contributions
 - Profile management
