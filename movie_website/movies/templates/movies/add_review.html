@@ -4,64 +4,135 @@
 
 {% block content %}
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        {% if editing %}
-                            <i class="fas fa-edit me-2"></i>Edit Review
-                        {% else %}
-                            <i class="fas fa-pen me-2"></i>Write Review
-                        {% endif %}
-                        for "{{ movie.title }}"
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            {% if movie.poster %}
-                                <img src="{{ movie.poster.url }}" class="img-fluid rounded" alt="{{ movie.title }}">
-                            {% else %}
-                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-                                    <i class="fas fa-film fa-3x text-white"></i>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-8">
-                            <h5>{{ movie.title }}</h5>
-                            <p class="text-muted">{{ movie.category.name }} • {{ movie.release_date|date:"Y" }}</p>
-                            <p>{{ movie.description|truncatewords:30 }}</p>
-                        </div>
-                    </div>
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
 
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            {{ form.review_text.label_tag }}
-                            {{ form.review_text }}
-                            {% if form.review_text.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.review_text.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Movie
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas {% if editing %}fa-save{% else %}fa-plus{% endif %} me-2"></i>
-                                {% if editing %}Update Review{% else %}Submit Review{% endif %}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+      <!-- Movie Info Card -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="row g-0 align-items-center">
+          <div class="col-md-4">
+            {% if movie.poster %}
+              <img src="{{ movie.poster.url }}" class="img-fluid rounded-start" alt="{{ movie.title }}">
+            {% else %}
+              <div class="bg-secondary rounded-start d-flex align-items-center justify-content-center" style="height: 230px;">
+                <i class="fas fa-film fa-3x text-white"></i>
+              </div>
+            {% endif %}
+          </div>
+          <div class="col-md-8">
+            <div class="card-body">
+              <h4 class="fw-bold mb-1">{{ movie.title }}</h4>
+              <p class="text-muted small mb-1">{{ movie.category.name }} • {{ movie.release_date|date:"Y" }}</p>
+              <p class="text-secondary small mb-0">{{ movie.description|truncatewords:25 }}</p>
             </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Review Form Card -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pb-0">
+          <h5 class="fw-bold mb-0 text-dark">
+            {% if editing %}
+              <i class="fas fa-edit text-primary me-2"></i>Edit Review
+            {% else %}
+              <i class="fas fa-pen text-primary me-2"></i>Write a Review
+            {% endif %}
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-muted">{{ form.review_text.label }}</label>
+              {{ form.review_text }}
+              {% if form.review_text.errors %}
+                <div class="text-danger mt-1">
+                  {% for error in form.review_text.errors %}
+                    <small>{{ error }}</small>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+              <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline-secondary px-4 py-2 rounded-3">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </a>
+              <button type="submit" class="btn btn-gradient px-4 py-2 rounded-3 fw-semibold">
+                <i class="fas {% if editing %}fa-save{% else %}fa-paper-plane{% endif %} me-2"></i>
+                {% if editing %}Update Review{% else %}Submit Review{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </div>
+  </div>
 </div>
+
+<!-- ✅ Matching UI Styles -->
+<style>
+  body {
+    background-color: #f8f9fb;
+  }
+
+  .card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  }
+
+  textarea.form-control {
+    min-height: 160px;
+    resize: none;
+    border-radius: 0.5rem;
+    border: 1px solid #dcdcdc;
+    font-size: 1rem;
+    padding: 0.8rem;
+    transition: all 0.25s ease;
+  }
+
+  textarea.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, #5a6fe0, #6b4098);
+    box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #e9ecef;
+  }
+
+  .form-label {
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 768px) {
+    .card-body {
+      text-align: center;
+    }
+    .btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
 {% endblock %}

@@ -31,10 +31,7 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         if commit:
             user.save()
-            # Create user profile
-            UserProfile.objects.create(user=user)
         return user
-
 
 class MovieForm(forms.ModelForm):
     class Meta:
@@ -119,3 +116,110 @@ class UpcomingMovieForm(forms.ModelForm):
             'youtube_trailer': forms.URLInput(attrs={'class': 'form-control'}),
             'poster': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+
+class EditProfileForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your first name'
+        })
+    )
+
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your last name'
+        })
+    )
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        })
+    )
+
+    username = forms.CharField(
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Choose a username'
+        })
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ['profile_picture', 'age', 'gender', 'location', 'bio', 'favorite_genres']
+        widgets = {
+            'profile_picture': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+            'age': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '13',
+                'max': '120',
+                'placeholder': 'Your age'
+            }),
+            'gender': forms.Select(attrs={
+                'class': 'form-control'
+            }, choices=[
+                ('', 'Select Gender'),
+                ('M', 'Male'),
+                ('F', 'Female'),
+                ('O', 'Other'),
+            ]),
+            'location': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'City, Country'
+            }),
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'maxlength': '500',
+                'placeholder': 'Tell us about yourself and your movie preferences...'
+            }),
+            'favorite_genres': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Action, Comedy, Drama, etc.'
+            })
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(EditProfileForm, self).__init__(*args, **kwargs)
+
+        if user:
+            self.fields['first_name'].initial = user.first_name
+            self.fields['last_name'].initial = user.last_name
+            self.fields['email'].initial = user.email
+            self.fields['username'].initial = user.username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        user_id = self.instance.user.id if hasattr(self.instance, 'user') else None
+
+        if User.objects.filter(email=email).exclude(id=user_id).exists():
+            raise forms.ValidationError("This email is already in use.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        user_id = self.instance.user.id if hasattr(self.instance, 'user') else None
+
+        if User.objects.filter(username=username).exclude(id=user_id).exists():
+            raise forms.ValidationError("This username is already taken.")
+        return username
+
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None and (age < 13 or age > 120):
+            raise forms.ValidationError("Age must be between 13 and 120.")
+        return age

@@ -14,7 +14,9 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import Rating, Review, Watchlist, UpcomingMovie
 from .forms import RatingForm, ReviewForm, UpcomingMovieForm
-
+from .forms import EditProfileForm
+from django.core.exceptions import ValidationError
+from django.db import transaction
 
 def home(request):
     categories = Category.objects.all()
@@ -53,13 +55,17 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, f'Welcome {user.first_name}! Your account has been created successfully.')
+
+            # Safely create or get the user profile
+            from .models import UserProfile
+            UserProfile.objects.get_or_create(user=user)
+
+            messages.success(request, f'Welcome {user.first_name or user.username}! Your account has been created successfully.')
             login(request, user)
             return redirect('home')
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
-
 
 @login_required
 def add_movie(request):
@@ -96,6 +102,7 @@ def edit_movie(request, pk):
     return render(request, 'movies/edit_movie.html', {'form': form, 'movie': movie})
 
 
+
 @login_required
 def delete_movie(request, pk):
     movie = get_object_or_404(Movie, pk=pk)
@@ -126,13 +133,6 @@ def movies_by_category(request, category_id):
     page = request.GET.get('page')
     movies = paginator.get_page(page)
     return render(request, 'movies/category_movies.html', {'category': category, 'movies': movies})
-
-
-@login_required
-def profile_view(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    user_movies = Movie.objects.filter(added_by=request.user)
-    return render(request, 'movies/profile.html', {'profile': profile, 'user_movies': user_movies})
 
 
 @login_required
@@ -408,3 +408,106 @@ def movie_detail(request, pk):
         'total_ratings': movie.total_ratings(),
     }
     return render(request, 'movies/movie_detail.html', context)
+
+
+@login_required
+def edit_profile(request):
+    """
+    View to handle user profile editing
+    """
+    # Get or create user profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, request.FILES, instance=profile, user=request.user)
+
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Update User model fields
+                    user = request.user
+                    user.first_name = form.cleaned_data['first_name']
+                    user.last_name = form.cleaned_data['last_name']
+                    user.email = form.cleaned_data['email']
+                    user.username = form.cleaned_data['username']
+                    user.save()
+
+                    # Update UserProfile
+                    profile = form.save(commit=False)
+                    profile.user = user
+                    profile.save()
+
+                    messages.success(request, 'Your profile has been updated successfully!')
+                    return redirect('profile')  # Redirect to profile view page
+
+            except ValidationError as e:
+                messages.error(request, f'Validation error: {e}')
+            except Exception as e:
+                messages.error(request, f'An error occurred while updating your profile: {str(e)}')
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        # GET request - show the form
+        form = EditProfileForm(instance=profile, user=request.user)
+
+    context = {
+        'form': form,
+        'user': request.user,
+        'profile': profile,
+        'title': 'Edit Profile'
+    }
+
+    return render(request, 'movies/edit_profile.html', context)
+
+
+@login_required
+def profile(request):
+    """
+    View to display user profile
+    """
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    user_movies = Movie.objects.filter(added_by=request.user)
+
+    # Calculate profile completion percentage
+    completion_fields = [
+        bool(request.user.first_name),
+        bool(request.user.last_name),
+        bool(request.user.email),
+        bool(profile.profile_picture),
+        bool(profile.age),
+        bool(profile.gender),
+        bool(profile.location),
+        bool(profile.bio),
+        bool(profile.favorite_genres),
+    ]
+
+    completed_fields = sum(completion_fields)
+    total_fields = len(completion_fields)
+    profile_completion_percentage = int((completed_fields / total_fields) * 100)
+
+    # Get user stats (you might need to adjust these based on your models)
+    try:
+        watchlist_count = Watchlist.objects.filter(user=request.user).count()
+    except:
+        watchlist_count = 0
+
+    try:
+        # Assuming you have a Rating model
+        ratings_count = request.user.rating_set.count() if hasattr(request.user, 'rating_set') else 0
+    except:
+        ratings_count = 0
+
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'title': 'My Profile',
+        'profile_completion_percentage': profile_completion_percentage,
+        'watchlist_count': watchlist_count,
+        'ratings_count': ratings_count,
+        'user_movies':user_movies,
+
+    }
+
+    return render(request, 'movies/profile.html', context)

@@ -1,37 +1,684 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Movie Hub{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        .navbar-brand { font-weight: bold; }
-        .movie-card {
-            transition: transform 0.2s;
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    .navbar-brand { font-weight: bold; }
+    .movie-card {
+        transition: transform 0.2s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .movie-card:hover { transform: translateY(-5px); }
+    .movie-poster { height: 300px; object-fit: cover; }
+
+    /* ===== Cinematic Hero Section ===== */
+    .hero-section {
+        position: relative;
+        background:
+            linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+            url('/static/images/newpic.png') no-repeat center center/cover;
+        color: #fff;
+        height: 90vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero-section h1 {
+        font-size: 3.8rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.9);
+        margin-bottom: 1.2rem;
+        animation: fadeInDown 1.2s ease-in-out;
+    }
+
+    .hero-section p {
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1.6;
+        max-width: 750px;
+        margin: 0 auto;
+        opacity: 0.95;
+        letter-spacing: 0.3px;
+        animation: fadeInUp 1.5s ease-in-out;
+    }
+
+    .hero-search {
+        margin-top: 3rem;
+        animation: fadeInUp 1.8s ease-in-out;
+    }
+
+    /* ===== Glassmorphism Search Bar ===== */
+    .input-group {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        padding: 0.4rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-control, .form-select {
+        height: 3.3rem;
+        border: none;
+        border-radius: 0.5rem 0 0 0.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* 🎬 Glass Dropdown Styling */
+    .form-select {
+        max-width: 200px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-select:hover,
+    .form-select:focus {
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        outline: none;
+    }
+
+    /* 🎞 Dropdown list glass effect + fade animation */
+    select option {
+        background: rgba(20, 20, 20, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        font-weight: 500;
+        animation: fadeDropdown 0.25s ease-in-out;
+    }
+
+    @keyframes fadeDropdown {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
         }
-        .movie-card:hover { transform: translateY(-5px); }
-        .movie-poster { height: 300px; object-fit: cover; }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    select:focus {
+        outline: none;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Search button */
+    .btn-light {
+        border-radius: 0.5rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        background: rgba(255, 255, 255, 0.85);
+        transition: all 0.3s ease;
+    }
+
+    /* ✨ Glow for search icon */
+    .btn-light:hover {
+        background: #fff;
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-light i {
+        transition: all 0.3s ease;
+    }
+
+    .btn-light:hover i {
+        color: #000;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    }
+
+    /* ✨ Focus Glow Effect */
+    .input-group:focus-within {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transform: scale(1.02);
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.25);
+        outline: none;
+        box-shadow: none;
+    }
+
+    /* Subtle moving glow overlay */
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: radial-gradient(circle at top left, rgba(255,255,255,0.07), transparent 70%),
+                    radial-gradient(circle at bottom right, rgba(255,255,255,0.07), transparent 70%);
+        animation: moveGlow 10s infinite alternate ease-in-out;
+        z-index: 0;
+    }
+
+    @keyframes moveGlow {
+        from { background-position: left top, right bottom; }
+        to { background-position: right bottom, left top; }
+    }
+
+    .hero-section > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer { background-color: #343a40; color: white; }
+    .rating-stars {
+        color: #ffc107;
+    }
+    .rating-star {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .rating-star:hover {
+        color: #ffc107 !important;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4rem 0;
+            height: 70vh;
+            padding: 3rem 1rem;
         }
-        .footer { background-color: #343a40; color: white; }
-        .rating-stars {
-            color: #ffc107;
+        .hero-section h1 {
+            font-size: 2.2rem;
         }
-        .rating-star {
-            cursor: pointer;
-            transition: color 0.2s;
+        .hero-section p {
+            font-size: 1rem;
         }
-        .rating-star:hover {
-            color: #ffc107 !important;
+        .hero-search {
+            margin-top: 2rem;
         }
-    </style>
+    }
+    /* ✅ Scoped fix for form inputs inside white Bootstrap cards only */
+.card .form-control,
+.card .form-select {
+    background-color: #fff !important;
+    color: #000 !important;
+    border: 1px solid #ced4da !important;
+    box-shadow: none !important;
+}
+
+.card .form-control::placeholder,
+.card .form-select::placeholder {
+    color: #6c757d !important;
+}
+
+.card .form-control:focus,
+.card .form-select:focus {
+    background-color: #fff !important;
+    color: #000 !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.3) !important;
+}
+/* ===== Cinematic Glass Cards ===== */
+.latest-movies-section {
+  background: radial-gradient(circle at top, #0d0d0d, #1a1a1a);
+}
+
+.glass-card {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+}
+/* ===== Ambient Glow Behind Cards ===== */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 20px;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.4s ease;
+  z-index: 0;
+}
+
+.glass-card:hover::before {
+  opacity: 1;
+  transform: scale(1.02);
+  filter: blur(20px);
+}
+
+/* Dynamic Category Glows */
+.glass-card[data-category*="Action"]::before {
+  background: radial-gradient(circle at center, rgba(255, 0, 50, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Drama"]::before {
+  background: radial-gradient(circle at center, rgba(255, 165, 0, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Comedy"]::before {
+  background: radial-gradient(circle at center, rgba(255, 255, 0, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Romance"]::before {
+  background: radial-gradient(circle at center, rgba(255, 0, 120, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Sci"]::before,
+.glass-card[data-category*="Fantasy"]::before {
+  background: radial-gradient(circle at center, rgba(0, 170, 255, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Thriller"]::before,
+.glass-card[data-category*="Horror"]::before {
+  background: radial-gradient(circle at center, rgba(255, 50, 50, 0.3), transparent 70%);
+}
+
+.glass-card[data-category*="Adventure"]::before {
+  background: radial-gradient(circle at center, rgba(0, 255, 150, 0.25), transparent 70%);
+}
+
+.glass-card[data-category*="Animation"]::before {
+  background: radial-gradient(circle at center, rgba(255, 200, 0, 0.25), transparent 70%);
+}
+
+
+.glass-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+.glass-card img {
+  transition: transform 0.5s ease, opacity 0.3s ease;
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card:hover img {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* Overlay */
+.glass-overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(15, 15, 15, 0.75);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  transition: background 0.4s ease;
+}
+
+.movie-desc {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Hover-Reveal Heart Button (Fixed Position + Alignment) */
+/* 🎬 Polished Hover-Reveal Heart Button */
+.heart-btn {
+  position: absolute;
+  top: -12px;
+  right: -7px;
+  transform: translateY(0);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  z-index: 10; /* ensures it's always above image */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* 💡 Appear smoothly when hovering */
+.glass-card:hover .heart-btn {
+  opacity: 1;
+  transform: translateY(4px) scale(1.08);
+}
+
+/* ❤️ Interactive hover glow */
+.heart-btn:hover {
+  color: #ff4d6d;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(4px) scale(1.15);
+  box-shadow: 0 0 15px rgba(255, 77, 109, 0.6);
+}
+
+/* ❤️ Clicked pulse effect */
+.heart-btn.clicked i {
+  color: #ff4d6d !important;
+  animation: popHeart 0.4s ease;
+}
+
+@keyframes popHeart {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+
+/* Hover state — glow pulse + color change */
+.heart-btn:hover {
+  color: #ff4d6d;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(255, 77, 109, 0.5);
+}
+
+/* Fixed: Ensure it’s always visible and centered */
+.glass-card {
+  position: relative;
+  overflow: hidden;
+}
+.glass-card img {
+  display: block;
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+}
+
+
+/* Star Ratings */
+.rating-stars i {
+  color: #ffcc00;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .glass-card img {
+    height: 250px;
+  }
+  .glass-overlay {
+    font-size: 0.9rem;
+  }
+}
+
+.heart-btn.clicked i {
+  animation: popHeart 0.4s ease;
+  color: #ff4d6d !important;
+}
+@keyframes popHeart {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.glass-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ✨ Subtle fade-in animation for cinematic card entrance */
+@keyframes fadeInCard {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.glass-card {
+  animation: fadeInCard 0.8s ease both;
+}
+.glass-card:nth-child(2) { animation-delay: 0.1s; }
+.glass-card:nth-child(3) { animation-delay: 0.2s; }
+.glass-card:nth-child(4) { animation-delay: 0.3s; }
+
+/* ===== 🎞 BROWSE BY CATEGORY - CINEMATIC GLASS STYLE ===== */
+/* ===== 🎞 BROWSE BY CATEGORY — MINI GLASS STYLE ===== */
+.browse-section {
+  background: linear-gradient(180deg, #0d0d0d 0%, #121212 100%);
+  color: #fff;
+  padding: 70px 0;
+  position: relative;
+  overflow: hidden;
+}
+/* Grid alignment fix — 5 cards per row on large screens */
+@media (min-width: 1200px) {
+  .col-lg-2 {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
+/* Slight background match with hero + latest sections */
+.browse-section {
+  background: radial-gradient(circle at top, #0c0c0c, #151515 90%);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Slight smaller size + softer glow */
+.category-card {
+  height: 130px;
+  padding: 1rem;
+  border-radius: 14px;
+}
+
+.category-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 10px 22px rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+
+/* moving ambient light */
+.browse-section::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -30%;
+  width: 160%;
+  height: 160%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);
+  animation: moveGlow 15s infinite alternate ease-in-out;
+  z-index: 0;
+}
+
+/* Section heading */
+.browse-section h2 {
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #fff;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+}
+
+/* 🌌 Category Card */
+.category-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  color: #fff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 160px; /* compact height */
+}
+
+/* glowing halo */
+.category-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.12), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.category-card:hover::before {
+  opacity: 1;
+}
+
+/* Category Text */
+.category-card h5 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  position: relative;
+  z-index: 2;
+}
+
+.category-card p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+/* ✨ Hover Animations */
+.category-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.08);
+}
+
+/* 🎨 Dynamic Glow per Category */
+.category-card[data-category*="Action"]:hover {
+  box-shadow: 0 0 25px rgba(255, 77, 77, 0.6);
+  border-color: rgba(255, 77, 77, 0.4);
+}
+
+.category-card[data-category*="Romance"]:hover {
+  box-shadow: 0 0 25px rgba(255, 100, 180, 0.6);
+  border-color: rgba(255, 100, 180, 0.4);
+}
+
+.category-card[data-category*="Sci"]:hover,
+.category-card[data-category*="Fantasy"]:hover {
+  box-shadow: 0 0 25px rgba(0, 170, 255, 0.6);
+  border-color: rgba(0, 170, 255, 0.4);
+}
+
+.category-card[data-category*="Comedy"]:hover {
+  box-shadow: 0 0 25px rgba(255, 240, 100, 0.6);
+  border-color: rgba(255, 240, 100, 0.4);
+}
+
+.category-card[data-category*="Horror"]:hover,
+.category-card[data-category*="Thriller"]:hover {
+  box-shadow: 0 0 25px rgba(255, 60, 60, 0.6);
+  border-color: rgba(255, 60, 60, 0.4);
+}
+
+.category-card[data-category*="Adventure"]:hover {
+  box-shadow: 0 0 25px rgba(0, 255, 150, 0.5);
+  border-color: rgba(0, 255, 150, 0.4);
+}
+
+.category-card[data-category*="Drama"]:hover {
+  box-shadow: 0 0 25px rgba(255, 160, 0, 0.6);
+  border-color: rgba(255, 160, 0, 0.4);
+}
+
+/* Fade-in entrance animation */
+@keyframes fadeInCategory {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.category-card {
+  animation: fadeInCategory 0.8s ease both;
+}
+
+.category-card:nth-child(2) { animation-delay: 0.1s; }
+.category-card:nth-child(3) { animation-delay: 0.2s; }
+.category-card:nth-child(4) { animation-delay: 0.3s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .category-card {
+    height: 140px;
+    margin-bottom: 1rem;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}
+#scrollTopBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999;
+  display: none;
+  opacity: 0.85;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+#scrollTopBtn:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+
+
+
+
+</style>
+
+
 </head>
 <body>
     <!-- Navigation -->
@@ -95,6 +742,8 @@
             </div>
         </div>
     </nav>
+    
+   
 
     <!-- Messages -->
     {% if messages %}
@@ -108,9 +757,6 @@
         </div>
     {% endif %}
 
-    <!-- CSRF Token for AJAX requests -->
-    {% csrf_token %}
-
     <!-- Main Content -->
     <main>
         {% block content %}
@@ -120,10 +766,63 @@
     <!-- Footer -->
     <footer class="footer mt-5 py-4">
         <div class="container text-center">
-            <p>&copy; 2024 Movie Hub. All rights reserved.</p>
+            <p>&copy; 2025 Movie Hub. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+/* === NEW FUNCTION for Home Page Hearts === */
+function toggleWatchlistHome(movieId, btn) {
+  btn.classList.add("clicked");
+  setTimeout(() => btn.classList.remove("clicked"), 500);
+
+  fetch(`/movie/${movieId}/watchlist/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const icon = btn.querySelector('i');
+      if (data.in_watchlist) {
+        icon.classList.add('text-danger');
+      } else {
+        icon.classList.remove('text-danger');
+      }
+    } else {
+      console.error('Error:', data.error);
+    }
+  })
+  .catch(error => console.error('Error:', error));
+}
+</script>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<button id="scrollTopBtn" class="btn btn-danger rounded-circle">
+  <i class="fas fa-arrow-up"></i>
+</button>
+<script>
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 200) {
+    scrollTopBtn.style.display = "block";
+  } else {
+    scrollTopBtn.style.display = "none";
+  }
+});
+
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
+
 </body>
 </html>

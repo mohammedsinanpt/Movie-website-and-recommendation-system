@@ -1,0 +1,317 @@
+{% extends 'movies/base.html' %}
+
+{% block title %}Edit Profile - Movie Hub{% endblock %}
+
+{% block content %}
+    <style>
+        .profile-image-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .profile-image-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .card {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: none;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.3;
+        }
+    </style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1><i class="fas fa-user-edit me-3"></i>Edit Profile</h1>
+        <p class="lead">Update your personal information and movie preferences</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3><i class="fas fa-user-cog me-2"></i>Profile Settings</h3>
+                </div>
+                <div class="card-body p-5">
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</strong>
+                            {% for field, errors in form.errors.items %}
+                                <ul class="mb-0 mt-2">
+                                    {% for error in errors %}
+                                        <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Profile Picture Section -->
+                        <div class="profile-image-section text-center mb-4 p-4 bg-light rounded">
+                            <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}https://via.placeholder.com/120x120/6c757d/ffffff?text={{ user.first_name.0|default:user.username.0|upper }}{% endif %}"
+                                 alt="Profile Picture"
+                                 class="profile-image-preview mb-3"
+                                 id="profilePreview">
+
+                            <div class="file-input-wrapper">
+                                <input type="file"
+                                       name="profile_picture"
+                                       id="profilePicture"
+                                       class="d-none"
+                                       accept="image/*"
+                                       onchange="previewImage(this)">
+                                <label for="profilePicture" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-camera me-2"></i>Change Photo
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>First Name *
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="first_name"
+                                       name="first_name"
+                                       value="{{ form.first_name.value|default:user.first_name }}"
+                                       required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Last Name *
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="last_name"
+                                       name="last_name"
+                                       value="{{ form.last_name.value|default:user.last_name }}"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email Address *
+                            </label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   value="{{ form.email.value|default:user.email }}"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-at me-2"></i>Username *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="username"
+                                   name="username"
+                                   value="{{ form.username.value|default:user.username }}"
+                                   required>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Additional Information</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="age" class="form-label">
+                                    <i class="fas fa-birthday-cake me-2"></i>Age
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="age"
+                                       name="age"
+                                       min="13"
+                                       max="120"
+                                       value="{{ form.age.value|default:user.profile.age|default:'' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="gender" class="form-label">
+                                    <i class="fas fa-venus-mars me-2"></i>Gender
+                                </label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="M" {% if user.profile.gender == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if user.profile.gender == 'F' %}selected{% endif %}>Female</option>
+                                    <option value="O" {% if user.profile.gender == 'O' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>Location
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="location"
+                                   name="location"
+                                   value="{{ form.location.value|default:user.profile.location|default:'' }}"
+                                   placeholder="City, Country">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">
+                                <i class="fas fa-quote-left me-2"></i>Bio
+                            </label>
+                            <textarea class="form-control"
+                                      id="bio"
+                                      name="bio"
+                                      rows="4"
+                                      placeholder="Tell us about yourself and your movie preferences..."
+                                      maxlength="500">{{ form.bio.value|default:user.profile.bio|default:'' }}</textarea>
+                            <div class="form-text text-end" id="bioCounter">500 characters remaining</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="favorite_genres" class="form-label">
+                                <i class="fas fa-film me-2"></i>Favorite Movie Genres
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="favorite_genres"
+                                   name="favorite_genres"
+                                   value="{{ form.favorite_genres.value|default:user.profile.favorite_genres|default:'' }}"
+                                   placeholder="Action, Comedy, Drama, Thriller, etc.">
+                            <div class="form-text">Separate multiple genres with commas</div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                            <a href="{% url 'profile' %}" class="btn btn-secondary btn-lg px-5">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    document.getElementById('profilePreview').src = e.target.result;
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+
+            if (!firstName || !lastName || !email || !username) {
+                e.preventDefault();
+                alert('Please fill in all required fields (First Name, Last Name, Email, Username)');
+                return false;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+                return false;
+            }
+
+            // Username validation (no spaces, minimum 3 characters)
+            if (username.length < 3 || username.includes(' ')) {
+                e.preventDefault();
+                alert('Username must be at least 3 characters long and contain no spaces');
+                return false;
+            }
+        });
+
+        // Character counter for bio
+        const bioTextarea = document.getElementById('bio');
+        const charCounter = document.getElementById('bioCounter');
+
+        function updateCharCount() {
+            const remaining = 500 - bioTextarea.value.length;
+            charCounter.textContent = `${remaining} characters remaining`;
+            if (remaining < 50) {
+                charCounter.classList.add('text-warning');
+                charCounter.classList.remove('text-muted');
+            } else if (remaining < 20) {
+                charCounter.classList.add('text-danger');
+                charCounter.classList.remove('text-warning', 'text-muted');
+            } else {
+                charCounter.classList.add('text-muted');
+                charCounter.classList.remove('text-warning', 'text-danger');
+            }
+        }
+
+        bioTextarea.addEventListener('input', updateCharCount);
+        updateCharCount(); // Initial call
+    </script>
+{% endblock %}

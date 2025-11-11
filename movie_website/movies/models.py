@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Avg
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import os
 
 
 class Category(models.Model):
@@ -41,16 +44,16 @@ class Movie(models.Model):
 
     def can_edit(self, user):
         return self.added_by == user or user.is_staff
-    
+
     def average_rating(self):
         """Calculate average user rating from 1-5 scale"""
         avg = self.user_ratings.aggregate(Avg('rating'))['rating__avg']
         return round(avg, 1) if avg else 0
-    
+
     def total_ratings(self):
         """Get total number of user ratings"""
         return self.user_ratings.count()
-    
+
     def user_rating(self, user):
         """Get specific user's rating for this movie"""
         if user.is_authenticated:
@@ -59,16 +62,6 @@ class Movie(models.Model):
             except Rating.DoesNotExist:
                 return 0
         return 0
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(max_length=500, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    favorite_genres = models.ManyToManyField(Category, blank=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s Profile"
 
 
 class Rating(models.Model):
@@ -137,3 +130,63 @@ class UpcomingMovie(models.Model):
 
     def __str__(self):
         return f"{self.title} (Coming {self.expected_release_date})"
+
+
+def user_profile_picture_path(instance, filename):
+    """Generate file path for user profile pictures"""
+    return f'profile_pictures/user_{instance.user.id}/{filename}'
+
+
+class UserProfile(models.Model):
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    profile_picture = models.ImageField(
+        upload_to=user_profile_picture_path,
+        blank=True,
+        null=True,
+        help_text="Upload a profile picture"
+    )
+    age = models.PositiveIntegerField(blank=True, null=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    favorite_genres = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Comma-separated list of favorite genres"
+    )
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "User Profile"
+        verbose_name_plural = "User Profiles"
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+    def get_favorite_genres_list(self):
+        """Return favorite genres as a list"""
+        if self.favorite_genres:
+            return [genre.strip() for genre in self.favorite_genres.split(',') if genre.strip()]
+        return []
+
+    def get_profile_picture_url(self):
+        """Return profile picture URL or default"""
+        if self.profile_picture and hasattr(self.profile_picture, 'url'):
+            return self.profile_picture.url
+        return '/static/images/default-profile.png'
+
+
+@receiver(post_save, sender=User)
+def create_or_save_user_profile(sender, instance, created, **kwargs):
+    """Create a UserProfile when a new User is created, or save existing one"""
+    if created:
+        UserProfile.objects.create(user=instance)
+    elif hasattr(instance, 'profile'):
+        instance.profile.save()
