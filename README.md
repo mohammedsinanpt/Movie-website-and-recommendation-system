@@ -59,6 +59,7 @@ Movie Hub is a full-featured Django web application that allows users to discove
 
 <img width="1878" height="962" alt="Screenshot 2025-09-24 225648" src="https://github.com/user-attachments/assets/7a203880-0505-4b99-9419-870cccd177b4" />
 <img width="1914" height="862" alt="Screenshot 2025-09-09 184544" src="https://github.com/user-attachments/assets/c36a5b6b-ee25-46d1-bfb4-b07c5ba423b4" />
+<img width="1816" height="913" alt="Screenshot 2026-01-16 113238" src="https://github.com/user-attachments/assets/5bb407fd-859f-400e-aee8-699e2874282d" />
 
 
 - Movie grid with ratings and categories
@@ -66,6 +67,7 @@ Movie Hub is a full-featured Django web application that allows users to discove
 
 ### Movie Detail Page
 <img width="1848" height="898" alt="Screenshot 2025-09-25 155800" src="https://github.com/user-attachments/assets/826e582f-75d7-4d7d-8f1c-b5a1ad1e0046" />
+
 <img width="1817" height="941" alt="Screenshot 2025-09-24 225912" src="https://github.com/user-attachments/assets/021ed40b-0caa-4060-8c4f-10aa01fbd940" />
 
 - Interactive rating system
@@ -89,7 +91,6 @@ Movie Hub is a full-featured Django web application that allows users to discove
 - User and content management
 
 ### Other Screenshots
-
 <img width="1165" height="903" alt="Screenshot 2025-09-24 230012" src="https://github.com/user-attachments/assets/c67e95e2-3fbc-4366-8ef2-faf279c0fd92" />
 <img width="1882" height="884" alt="Screenshot 2025-09-24 225706" src="https://github.com/user-attachments/assets/aa6d8482-efa8-4bc5-99f7-673bf9644898" />
 <img width="1899" height="959" alt="Screenshot 2025-09-25 161651" src="https://github.com/user-attachments/assets/6532b31a-72ba-46da-8a17-2ad89966d81d" />
